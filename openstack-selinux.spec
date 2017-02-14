@@ -1,7 +1,6 @@
 # RPM spec file for OpenStack on RHEL 6 and 7
 # Some bits borrowed from the katello-selinux package
 
-%global selinuxtype	targeted
 %global moduletype	services
 %global modulenames	os-ovs os-swift os-nova os-neutron os-mysql os-glance os-rsync os-rabbitmq os-keepalived os-keystone os-haproxy os-mongodb os-ipxe os-redis os-cinder
 
@@ -15,12 +14,12 @@
 	/sbin/restorecon -Rv %{_bindir}/swift* %{_localstatedir}/run/swift /srv %{_bindir}/neutron* %{_localstatedir}/run/redis %{_localstatedir}/log &> /dev/null || :\
 
 # Version of SELinux we were using
-%global selinux_policyver 3.13.1-23.el7
+%global selinux_policyver 3.13.1-93.el7
 
 # Package information
 Name:			openstack-selinux
-Version:		0.7.13
-Release:		2%{?dist}
+Version:		0.8.0
+Release:		1%{?dist}
 License:		GPLv2
 Group:			System Environment/Base
 Summary:		SELinux Policies for OpenStack
@@ -56,6 +55,8 @@ AVC tests for %{name}
 make SHARE="%{_datadir}" TARGETS="%{modulenames}"
 
 %install
+install -d %{buildroot}%{_datadir}/%{name}/%{version}
+install -p -m 755 local_settings.sh %{buildroot}%{_datadir}/%{name}/%{version}
 
 # Install SELinux interfaces
 %_format INTERFACES $x.if
@@ -75,95 +76,29 @@ install -m 0644 tests/bz* %{buildroot}%{_datadir}/%{name}/%{version}/tests
 install -m 0755 tests/check_all %{buildroot}%{_datadir}/%{name}/%{version}/tests
 
 %post
-#
-# Port rules
-#
-# bz#1107873
-%{_sbindir}/semanage port -N -a -t amqp_port_t -p tcp 15672 &> /dev/null
-
-# bz#1118859
-%{_sbindir}/semanage port -N -m -t mysqld_port_t -p tcp 4444 &> /dev/null
-
-# bz#1260202
-%{_sbindir}/semanage port -N -m -t openvswitch_port_t -p tcp 6653 &> /dev/null
-
-# bz#1360434
-%{_sbindir}/semanage port -N -m -t http_port_t -p tcp 8088 &> /dev/null
-
-#
-# Booleans & file contexts
-#
-CR=$'\n'
-INPUT="boolean -N -m --on virt_use_fusefs
-boolean -N -m --on glance_use_fusefs
-boolean -N -m --on haproxy_connect_any
-boolean -N -m --on nis_enabled
-boolean -N -m --on rsync_full_access
-boolean -N -m --on rsync_client
-boolean -N -m --on virt_use_execmem
-boolean -N -m --on virt_use_nfs
-boolean -N -m --on daemons_enable_cluster_mode
-boolean -N -m --on glance_use_execmem
-boolean -N -m --on httpd_execmem
-boolean -N -m --on domain_kernel_load_modules
-boolean -N -m --on httpd_can_network_connect
-boolean -N -m --on swift_can_network
-boolean -N -m --on httpd_use_openstack
-fcontext -N -a -t httpd_var_lib_t %{_sharedstatedir}/openstack-dashboard
-fcontext -N -a -t httpd_log_t %{_localstatedir}/log/gnocchi/app.log
-fcontext -N -a -t httpd_log_t %{_localstatedir}/log/aodh/app.log
-fcontext -N -a -t httpd_log_t %{_localstatedir}/log/ceilometer/app.log
-fcontext -N -a -t neutron_exec_t %{_bindir}/neutron-rootwrap-daemon
-fcontext -N -a -t neutron_exec_t %{_bindir}/neutron-metadata-agent
-fcontext -N -a -t neutron_exec_t %{_bindir}/neutron-netns-cleanup
-fcontext -N -a -t neutron_exec_t %{_bindir}/neutron-ns-metadata-proxy
-fcontext -N -a -t neutron_exec_t %{_bindir}/neutron-vpn-agent"
-
-#
-# Append modules
-#
-for x in %{modulenames}; do
-  INPUT="${INPUT}${CR}module -N -a %{_datadir}/selinux/packages/$x.pp.bz2"
-done
-
-#
-# Do everything in one transaction, but don't reload policy
-# in case we're in a chroot environment.
-#
-echo "$INPUT" | %{_sbindir}/semanage import -N
-
-if %{_sbindir}/selinuxenabled ; then
-	#
-	# Chroot environments (e.g. when building images)
-	# won't get here, but the image will apply all of
-	# the policy on a reboot.
-	#
-	%{_sbindir}/load_policy
-
-	# Unfortunately, we can't load modules and set
-	# booleans in those modules in a single transaction
-	setsebool -P os_nova_use_execmem on
-	setsebool -P os_neutron_use_execmem on
-	setsebool -P os_swift_use_execmem on
-	setsebool -P os_keystone_use_execmem on
-
-	%relabel_files
-fi
+BINDIR=%{_bindir} \
+SBINDIR=%{_sbindir} \
+SHAREDSTATEDIR=%{_sharedstatedir} \
+LOCALSTATEDIR=%{_localstatedir} \
+SHAREDIR=%{_sharedir} \
+DATADIR=%{_datadir} \
+%{_datadir}/%{name}/%{version}/local_settings.sh -m "%{modulenames}"
 
 
-%postun
-if [ $1 -eq 0 ]; then
-	%{_sbindir}/semodule -n -r %{modulenames} &> /dev/null || :
-	if %{_sbindir}/selinuxenabled ; then
-		%{_sbindir}/load_policy
-		%relabel_files
-	fi
-fi
+%preun
+BINDIR=%{_bindir} \
+SBINDIR=%{_sbindir} \
+SHAREDSTATEDIR=%{_sharedstatedir} \
+LOCALSTATEDIR=%{_localstatedir} \
+SHAREDIR=%{_sharedir} \
+DATADIR=%{_datadir} \
+%{_datadir}/%{name}/%{version}/local_settings.sh -xm "%{modulenames}"
 
 
 %files
 %defattr(-,root,root,0755)
 %doc COPYING
+%attr(0755,root,root) %{_datadir}/%{name}/%{version}/local_settings.sh
 %attr(0644,root,root) %{_datadir}/selinux/packages/*.pp.bz2
 %attr(0644,root,root) %{_datadir}/selinux/devel/include/%{moduletype}/*.if
 
@@ -174,28 +109,92 @@ fi
 
 
 %changelog
-* Fri Dec 9 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.13-2
+* Tue Feb 14 2017 Lon Hohberger <lon@redhat.com> 0.8.0-1
+- Upgrade to 0.8.0
+- Use local_settings.sh from openstack-selinux instead of including 
+  a lot of settings in the spec file.
+
+* Tue Jan 3 2017 Lon Hohberger <lhh@redhat.com> 0.7.13-3
+- Fix source URL
+
+* Thu Dec 8 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.13-2
 - Turn on httpd_use_openstack boolean
 - Resolves: rhbz#1402926
 
-* Fri Dec 9 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.13-1
-- Upstream 0.7.13
+* Tue Nov 29 2016 Lon Hohberger <lon@redhat.com> 0.7.13-1
+- Allow DPDK operation for OpenVSwitch
+- Resolves: rhbz#1397537
 
-* Fri Nov 25 2016 Haïkel Guémar <hguemar@fedoraproject.org> - 0.7.12-1
-- Upstream 0.7.12 (RHBZ #1375766)
+* Wed Nov 02 2016 Lon Hohberger <lon@redhat.com> 0.7.12-1
+- Transition to iscsid_exec_t from cinder_backup_t
+- Resolves: rhbz#1384472
 
-* Tue Oct 11 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.4-2
+* Tue Nov 01 2016 Lon Hohberger <lon@redhat.com> 0.7.11-2
+- Label WSGI app.log files as httpd_log_t
+- Resolves: rhbz#1387347
+
+* Wed Oct 12 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.11-1
+- Reverting ovs rules to connect to clamd_port_t
+
+* Tue Oct 11 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.10-2
 - Run a restorecon of /var/run/redis
 - Resolves: rhbz#1383775
 
-* Tue Jul 19 2016 Haïkel Guémar <hguemar@fedoraproject.org> - 0.7.4-1
-- Upstream 0.7.4
+* Thu Oct 6 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.10-1
+- Allow ovs to connect to clamd_port_t
+- Resolves: rhbz#1382372
 
-* Wed Apr 13 2016 Haikel Guemar <hguemar@fedoraproject.org> 0.7.2-1
-- Update to 0.7.2
+* Thu Sep 15 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.9-1
+- Allow virtlogd_t to have the dac_override cap
+- Resolves: rhbz#1377272
 
-* Tue Apr 12 2016 Haïkel Guémar <hguemar@fedoraproject.org> - 0.7.0-2
-- Allow httpd to write the Cinder log directory
+* Thu Sep 15 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.8-2
+- Use selinux-polxiy-3.13.1-93.el7
+- Resolves: rhbz#1375766
+
+* Thu Sep 15 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.8-1
+- Allow Nova to use virtlogd_t and bump the selinux base
+- policy version
+- Resolves: rhbz#1375766
+
+* Fri Sep 2 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.7-1
+- Allow openvswitch to connect to the vpn port
+- Resolves: rhbz#1372453
+
+* Mon Aug 29 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.6-1
+- Allow openvswitch to connect to its own port
+- Resolves: rhbz#1334732
+
+* Wed Aug 3 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.5-1
+- Allow glance registry to connect to memcached
+- Resolves: rhbz#1362609
+
+* Tue Jul 26 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.4-2
+- Port over some selinux policy scripted in the undercloud
+- Resolves: rhbz#1360434
+
+* Thu Apr 21 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.4-1
+- Neutron needs to be able to connect to neutron-openvsw
+- Resolves: rhbz#1357961
+
+* Thu Apr 21 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.3-3
+- Swift needs its network boolean enabled
+- Resolves: rhbz#1329038
+
+* Mon Apr 18 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.3-2
+- Horizon needs the ability to access its shared secret
+- Resolves: rhbz#1328177
+
+* Fri Apr 15 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.3-1
+- Allow keystone to use memcache as a backend
+- Resolves: rhbz#1327609
+
+* Tue Apr 12 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.2-1
+- Allow httpd to create Cinders log file
+- Resolves: rhbz#1325623
+
+* Tue Apr 12 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.1-1
+- Allow httpd to write to Cinders log
 - Resolves: rhbz#1325623
 
 * Sun Apr 10 2016 Ryan Hallisey <rhallise@redhat.com> 0.7.0-1
