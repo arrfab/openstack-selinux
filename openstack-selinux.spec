@@ -25,11 +25,6 @@ Requires:		policycoreutils, libselinux-utils
 Requires(post):		selinux-policy-base >= %{selinux_policyver}, selinux-policy-targeted >= %{selinux_policyver}, policycoreutils, policycoreutils-python
 Requires(postun):	policycoreutils
 BuildRequires:		selinux-policy selinux-policy-devel
-
-#
-# wget -c https://github.ncom/lhh/%{name}/archive/%{version}.tar.gz \
-#    -O %{name}-%{version}.tar.gz
-#
 Source:			https://github.com/redhat-openstack/%{name}/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 
 
@@ -601,7 +596,7 @@ DATADIR=%{_datadir} \
 * Tue Jun 17 2014 Lon Hohberger <lhh@redhat.com> - 0.5.2-2
 - Add proper file contexts neutron-metadata-agent, neutron-netns-cleanup,
   and neutron-ns-metadata-proxy
-- Drop monitoring-plugins tweaks in %post; not needed any more
+- Drop monitoring-plugins tweaks in RPM post; not needed any more
 - Resolves: rhbz#1110263
 
 * Fri Jun 13 2014 Lon Hohberger <lhh@redhat.com> - 0.5.2-1
@@ -620,7 +615,7 @@ DATADIR=%{_datadir} \
 - Set check_ping to the correct context
 
 * Fri Jun 13 2014 Lon Hohberger <lhh@redhat.com> - 0.5.0-2
-- Turn on virt_use_fusefs in %post
+- Turn on virt_use_fusefs in RPM post
 - Resolves: rhbz#1052971
 
 * Fri Jun 13 2014 Lon Hohberger <lhh@redhat.com> - 0.5.0-1
@@ -639,7 +634,7 @@ DATADIR=%{_datadir} \
 * Thu Nov 14 2013 Lon Hohberger <lhh@redhat.com> - 0.1.3-1
 - Remove unnecessary policy for LBaaS
 - Rebase to 0.1.3
-- Correct file contexts in %post for now
+- Correct file contexts in RPM post for now
   Resolves: rhbz#1020052
 
 * Tue Nov 12 2013 Lon Hohberger <lhh@redhat.com> - 0.1.2-13
