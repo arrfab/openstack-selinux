@@ -105,6 +105,11 @@ DATADIR=%{_datadir} \
 
 
 %changelog
+* Wed Feb 15 2017 Lon Hohberger <lon@redhat.com> 0.8.1-1
+- Update to 0.8.1
+- Fix selinux policy version
+- Drop unnecessary macro in spec file
+
 * Tue Feb 14 2017 Lon Hohberger <lon@redhat.com> 0.8.0-1
 - Upgrade to 0.8.0
 - Use local_settings.sh from openstack-selinux instead of including 
