@@ -88,7 +88,7 @@ DATADIR=%{_datadir} \
 
 %files
 %defattr(-,root,root,0755)
-%doc COPYING
+%license COPYING
 %attr(0755,root,root) %{_datadir}/%{name}/%{version}/local_settings.sh
 %attr(0644,root,root) %{_datadir}/selinux/packages/*.pp.bz2
 %attr(0644,root,root) %{_datadir}/selinux/devel/include/%{moduletype}/*.if
