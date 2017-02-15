@@ -9,10 +9,6 @@
 #   Format must contain '$x' somewhere to do anything useful
 %global _format() export %1=""; for x in %{modulenames}; do %1+=%2; %1+=" "; done;
 
-# We do this in post install and post uninstall phases
-%global relabel_files() \
-	/sbin/restorecon -Rv %{_bindir}/swift* %{_localstatedir}/run/swift /srv %{_bindir}/neutron* %{_localstatedir}/run/redis %{_localstatedir}/log &> /dev/null || :\
-
 # Version of SELinux we were using
 %global selinux_policyver 3.13.1-102.el7
 
