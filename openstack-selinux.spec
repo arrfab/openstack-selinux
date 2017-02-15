@@ -14,7 +14,7 @@
 	/sbin/restorecon -Rv %{_bindir}/swift* %{_localstatedir}/run/swift /srv %{_bindir}/neutron* %{_localstatedir}/run/redis %{_localstatedir}/log &> /dev/null || :\
 
 # Version of SELinux we were using
-%global selinux_policyver 3.13.1-93.el7
+%global selinux_policyver 3.13.1-102.el7
 
 # Package information
 Name:			openstack-selinux
