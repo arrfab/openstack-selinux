@@ -14,7 +14,7 @@
 
 # Package information
 Name:			openstack-selinux
-Version:		0.8.0
+Version:		0.8.2
 Release:		1%{?dist}
 License:		GPLv2
 Group:			System Environment/Base
@@ -73,7 +73,7 @@ SHAREDSTATEDIR=%{_sharedstatedir} \
 LOCALSTATEDIR=%{_localstatedir} \
 SHAREDIR=%{_sharedir} \
 DATADIR=%{_datadir} \
-%{_datadir}/%{name}/%{version}/local_settings.sh -m "%{modulenames}"
+%{_datadir}/%{name}/%{version}/local_settings.sh -m "%{modulenames}" -q
 
 
 %preun
@@ -83,7 +83,7 @@ SHAREDSTATEDIR=%{_sharedstatedir} \
 LOCALSTATEDIR=%{_localstatedir} \
 SHAREDIR=%{_sharedir} \
 DATADIR=%{_datadir} \
-%{_datadir}/%{name}/%{version}/local_settings.sh -xm "%{modulenames}"
+%{_datadir}/%{name}/%{version}/local_settings.sh -xm "%{modulenames}" -q
 
 
 %files
@@ -100,6 +100,10 @@ DATADIR=%{_datadir} \
 
 
 %changelog
+* Wed Feb 15 2017 Lon Hohberger <lon@redhat.com> 0.8.2-1
+- Update to 0.8.2
+- Use -q option to local_settings.sh
+
 * Wed Feb 15 2017 Lon Hohberger <lon@redhat.com> 0.8.1-1
 - Update to 0.8.1
 - Fix selinux policy version
