@@ -14,22 +14,31 @@
 
 # Package information
 Name:			openstack-selinux
-Version:		0.8.2
+Version:		0.8.3
 Release:		1%{?dist}
 License:		GPLv2
 Group:			System Environment/Base
 Summary:		SELinux Policies for OpenStack
 BuildArch:		noarch
 URL:			https://github.com/redhat-openstack/%{name}
-Requires:		policycoreutils, libselinux-utils
+Requires:		policycoreutils
 Requires(post):		selinux-policy-base >= %{selinux_policyver}, selinux-policy-targeted >= %{selinux_policyver}, policycoreutils, policycoreutils-python
 Requires(postun):	policycoreutils
 BuildRequires:		selinux-policy selinux-policy-devel
 Source:			https://github.com/redhat-openstack/%{name}/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 
-
 %description
 SELinux policy modules for use with OpenStack
+
+
+%package devel
+Summary:		Development files (interfaces) for %{name}
+Requires:		selinux-policy-devel
+Requires:		%{name} = %{version}-%{release}
+
+%description devel
+Development files (interfaces) for %{name}
+
 
 %package test
 Summary:		AVC Tests for %{name}
@@ -39,11 +48,12 @@ Requires:		%{name} = %{version}-%{release}
 %description test
 AVC tests for %{name}
 
+
 %prep
 %setup -q
 
 %build
-make SHARE="%{_datadir}" TARGETS="%{modulenames}"
+make DATADIR="%{_datadir}" TARGETS="%{modulenames}"
 
 %install
 install -d %{buildroot}%{_datadir}/%{name}/%{version}
@@ -69,45 +79,46 @@ install -m 0755 tests/check_all %{buildroot}%{_datadir}/%{name}/%{version}/tests
 %post
 BINDIR=%{_bindir} \
 SBINDIR=%{_sbindir} \
-SHAREDSTATEDIR=%{_sharedstatedir} \
 LOCALSTATEDIR=%{_localstatedir} \
-SHAREDIR=%{_sharedir} \
 DATADIR=%{_datadir} \
+SHAREDSTATEDIR=%{_sharedstatedir} \
 %{_datadir}/%{name}/%{version}/local_settings.sh -m "%{modulenames}" -q
 
 
 %preun
 BINDIR=%{_bindir} \
 SBINDIR=%{_sbindir} \
-SHAREDSTATEDIR=%{_sharedstatedir} \
 LOCALSTATEDIR=%{_localstatedir} \
-SHAREDIR=%{_sharedir} \
 DATADIR=%{_datadir} \
+SHAREDSTATEDIR=%{_sharedstatedir} \
 %{_datadir}/%{name}/%{version}/local_settings.sh -xm "%{modulenames}" -q
 
 
 %files
-%defattr(-,root,root,0755)
 %license COPYING
+%dir %{_datadir}/%{name}
+%dir %{_datadir}/%{name}/%{version}
 %attr(0755,root,root) %{_datadir}/%{name}/%{version}/local_settings.sh
 %attr(0644,root,root) %{_datadir}/selinux/packages/*.pp.bz2
-%attr(0644,root,root) %{_datadir}/selinux/devel/include/%{moduletype}/*.if
 
 %files test
-%defattr(-,root,root,0644)
+%dir %{_datadir}/%{name}/%{version}/tests
 %attr(0755,root,root) %{_datadir}/%{name}/%{version}/tests/check_all
 %attr(0644,root,root) %{_datadir}/%{name}/%{version}/tests/bz*
 
+%files devel
+%attr(0644,root,root) %{_datadir}/selinux/devel/include/%{moduletype}/*.if
+
 
 %changelog
-* Wed Feb 15 2017 Lon Hohberger <lon@redhat.com> 0.8.2-1
+* Wed Feb 15 2017 Lon Hohberger <lon@redhat.com> 0.8.3-1
 - Update to 0.8.2
 - Use -q option to local_settings.sh
-
-* Wed Feb 15 2017 Lon Hohberger <lon@redhat.com> 0.8.1-1
-- Update to 0.8.1
 - Fix selinux policy version
 - Drop unnecessary macro in spec file
+- Use DATADIR instead of SHAREDIR for build
+- Drop useless SHAREDIR when calling local_settings.sh
+- Move interfaces to -devel package
 
 * Tue Feb 14 2017 Lon Hohberger <lon@redhat.com> 0.8.0-1
 - Upgrade to 0.8.0
