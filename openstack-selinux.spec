@@ -14,7 +14,7 @@
 
 # Package information
 Name:			openstack-selinux
-Version:		0.8.3
+Version:		0.8.4
 Release:		1%{?dist}
 License:		GPLv2
 Group:			System Environment/Base
@@ -86,12 +86,14 @@ SHAREDSTATEDIR=%{_sharedstatedir} \
 
 
 %preun
+if [ $1 -eq 0 ]; then
 BINDIR=%{_bindir} \
 SBINDIR=%{_sbindir} \
 LOCALSTATEDIR=%{_localstatedir} \
 DATADIR=%{_datadir} \
 SHAREDSTATEDIR=%{_sharedstatedir} \
 %{_datadir}/%{name}/%{version}/local_settings.sh -xm "%{modulenames}" -q
+fi
 
 
 %files
@@ -111,6 +113,14 @@ SHAREDSTATEDIR=%{_sharedstatedir} \
 
 
 %changelog
+* Fri Feb 17 2017 Lon Hohberger <lon@redhat.com> 0.8.4-1
+- Update to 0.8.4
+- Allow Glance access to privsep bits
+- Make Designate bind9 files named_zone_t
+- Resolves: rhbz#1395240 rhbz#1353227
+- [important] Fix preun scriptlet to only fire when
+  uninstalling instead of upgrading
+
 * Wed Feb 15 2017 Lon Hohberger <lon@redhat.com> 0.8.3-1
 - Update to 0.8.2
 - Use -q option to local_settings.sh
