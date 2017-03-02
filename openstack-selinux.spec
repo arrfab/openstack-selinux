@@ -14,7 +14,7 @@
 
 # Package information
 Name:			openstack-selinux
-Version:		0.8.4
+Version:		0.8.5
 Release:		1%{?dist}
 License:		GPLv2
 Group:			System Environment/Base
@@ -113,6 +113,12 @@ fi
 
 
 %changelog
+* Thu Mar 02 2017 Lon Hohberger <lon@redhat.com> 0.8.5-1
+- Update to 0.8.5
+- Fix neutron-openvswitch-agent startup failures
+- Set port 8000 to http_port_t
+- Resolves: rhbz#1396553 rhbz#1419418 rhbz#1420134
+
 * Fri Feb 17 2017 Lon Hohberger <lon@redhat.com> 0.8.4-1
 - Update to 0.8.4
 - Allow Glance access to privsep bits
