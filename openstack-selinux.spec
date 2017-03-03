@@ -1,8 +1,8 @@
 # RPM spec file for OpenStack on RHEL 6 and 7
 # Some bits borrowed from the katello-selinux package
 
-%global moduletype	services
-%global modulenames	os-ovs os-swift os-nova os-neutron os-mysql os-glance os-rsync os-rabbitmq os-keepalived os-keystone os-haproxy os-mongodb os-ipxe os-redis os-cinder
+%global moduletype      services
+%global modulenames     os-ovs os-swift os-nova os-neutron os-mysql os-glance os-rsync os-rabbitmq os-keepalived os-keystone os-haproxy os-mongodb os-ipxe os-redis os-cinder
 
 # Usage: _format var format
 #   Expand 'modulenames' into various formats as needed
@@ -13,37 +13,42 @@
 %global selinux_policyver 3.13.1-102.el7
 
 # Package information
-Name:			openstack-selinux
-Version:		0.8.5
-Release:		1%{?dist}
-License:		GPLv2
-Group:			System Environment/Base
-Summary:		SELinux Policies for OpenStack
-BuildArch:		noarch
-URL:			https://github.com/redhat-openstack/%{name}
-Requires:		policycoreutils
-Requires(post):		selinux-policy-base >= %{selinux_policyver}, selinux-policy-targeted >= %{selinux_policyver}, policycoreutils, policycoreutils-python
-Requires(postun):	policycoreutils
-BuildRequires:		selinux-policy selinux-policy-devel
-Source:			https://github.com/redhat-openstack/%{name}/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Name:                   openstack-selinux
+Version:                0.8.5
+Release:                1%{?dist}
+License:                GPLv2
+Group:                  System Environment/Base
+Summary:                SELinux Policies for OpenStack
+BuildArch:              noarch
+URL:                    https://github.com/redhat-openstack/%{name}
+Requires:               policycoreutils
+Requires(post):         selinux-policy-base >= %{selinux_policyver}
+Requires(post):         selinux-policy-targeted >= %{selinux_policyver}
+Requires(post):         policycoreutils
+Requires(post):         policycoreutils-python
+Requires(preun):        policycoreutils
+BuildRequires:          selinux-policy
+BuildRequires:          selinux-policy-devel
+Source:                 https://github.com/redhat-openstack/%{name}/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 
 %description
 SELinux policy modules for use with OpenStack
 
 
 %package devel
-Summary:		Development files (interfaces) for %{name}
-Requires:		selinux-policy-devel
-Requires:		%{name} = %{version}-%{release}
+Summary:                Development files (interfaces) for %{name}
+Requires:               selinux-policy-devel
+Requires:               %{name} = %{version}-%{release}
 
 %description devel
 Development files (interfaces) for %{name}
 
 
 %package test
-Summary:		AVC Tests for %{name}
-Requires:		policycoreutils-python, bash
-Requires:		%{name} = %{version}-%{release}
+Summary:                AVC Tests for %{name}
+Requires:               policycoreutils-python
+Requires:               bash
+Requires:               %{name} = %{version}-%{release}
 
 %description test
 AVC tests for %{name}
@@ -63,13 +68,13 @@ install -p -m 755 local_settings.sh %{buildroot}%{_datadir}/%{name}/%{version}
 %_format INTERFACES $x.if
 install -d %{buildroot}%{_datadir}/selinux/devel/include/%{moduletype}
 install -p -m 644 $INTERFACES \
-	%{buildroot}%{_datadir}/selinux/devel/include/%{moduletype}
+        %{buildroot}%{_datadir}/selinux/devel/include/%{moduletype}
 
 # Install policy modules
 %_format MODULES $x.pp.bz2
 install -d %{buildroot}%{_datadir}/selinux/packages
 install -m 0644 $MODULES \
-	%{buildroot}%{_datadir}/selinux/packages
+        %{buildroot}%{_datadir}/selinux/packages
 
 # Test package files
 install -d %{buildroot}%{_datadir}/%{name}/%{version}/tests
